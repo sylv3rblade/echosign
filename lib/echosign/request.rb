@@ -110,26 +110,18 @@ module Echosign::Request
   private
 
   def self.get(endpoint, headers)
-    begin
-      HTTParty.get(
-        endpoint, 
-        headers: headers
-      )
-    rescue Exception => error
-      raise_error(error)
-    end
+    RestClient.get(
+      endpoint, 
+      headers
+    )
   end
 
   def self.post(endpoint, body, headers)
-    begin
-      HTTParty.post(
-        endpoint,
-        query: body, 
-        headers: headers
-      )
-    rescue Exception => error
-      raise_error(error)
-    end
+    RestClient.post(
+      endpoint, 
+      body.to_json, 
+      headers
+    )
   end
 
   def self.add_query(url, query)
