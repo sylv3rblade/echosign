@@ -136,18 +136,22 @@ module Echosign::Request
     end
   end
 
-  def self.post(endpoint, body, headers, options = {multipart:false})
+  def self.post(endpoint, body, headers, options = {})
+    option = {multipart:false, json:false}.merge(options)
     puts "[Echosign] #{endpoint}"
     puts "[Echosign] #{headers}" if headers.present?
     puts "[Echosign] #{body}"
     begin
+      if options[:json]
+        headers.merge!('Content-Type' => 'application/json')
+        body = body.to_json if body.is_a?(Hash)
+      end
       if options[:multipart]
         response = HTTMultiParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
       else
         response = HTTParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
       end
       puts response
-      puts response.body
       response
     rescue Exception => error
       raise_error(error)
