@@ -16,7 +16,7 @@ module Echosign::Request
   BASE_URL = 'https://api.eu1.echosign.com/api/rest/v5'
   REFRESH_URL = 'https://api.eu1.echosign.com/oauth/refresh'
 
-  ENDPOINT = { 
+  ENDPOINT = {
     token: BASE_URL + '/auth/tokens',
     refresh: REFRESH_URL,
     user: BASE_URL + '/users',
@@ -57,12 +57,12 @@ module Echosign::Request
   # @param token [String] Auth Token
   # @return [Hash] New user response body
   def self.create_user(body, token)
-    endpoint = ENDPOINT.fetch(:user) 
+    endpoint = ENDPOINT.fetch(:user)
     headers = { 'Access-Token' => token}
     response = post(endpoint, body, headers)
     JSON.parse(response.body)
   end
-  
+
   # Sends a reminder for an agreement.
   #
   # @param body [Hash] Valid request body
@@ -84,24 +84,17 @@ module Echosign::Request
   # @return [Hash] Transient Document Response Body
   def self.create_transient_document(token, file_name, file_handle, mime_type=nil)
     headers = { 'Access-Token' => token }
-
-    begin
-      response = HTTParty.post( 
-                                 ENDPOINT.fetch(:transientDocument), 
-                                 { 'File-Name' => file_name, 
-                                   'Mime-Type' => mime_type, 
-                                   'File' => file_handle,  
-                                   :multipart => true}, 
-                                   headers
-                                )
-    rescue Exception => error
-      raise_error(error)
+    if file_handle.is_a?(String)
+      raise "Cannot find file: #{file_handle}" unless File.exists?(file_handle)
+      file_handle = File.new(file_handle)
     end
+    body = { 'File-Name' => file_name, 'Mime-Type' => mime_type, 'File' => file_handle}
+    response = post(ENDPOINT.fetch(:transientDocument), body, headers, multipart:true)
 
     JSON.parse(response.body)
   end
 
-  # Gets all the users in an account that the caller has permissions to access. 
+  # Gets all the users in an account that the caller has permissions to access.
   #
   # @param token [String] Auth Token
   # @param user_email [String] The email address of the user whose details are being requested.
@@ -113,7 +106,7 @@ module Echosign::Request
     JSON.parse(response)
   end
 
-  # Gets all the users in an account that the caller has permissions to access. 
+  # Gets all the users in an account that the caller has permissions to access.
   #
   # @param token [String] Auth Token
   # @param user_id [String]
@@ -129,23 +122,33 @@ module Echosign::Request
   private
 
   def self.get(endpoint, headers)
+    puts "[Echosign] #{endpoint}"
+    puts "[Echosign] #{headers}" if headers.present?
     begin
-      HTTParty.get(
-        endpoint, 
+      response = HTTParty.get(
+        endpoint,
         headers: headers
       )
+      puts response.body
+      response
     rescue Exception => error
       raise_error(error)
     end
   end
 
-  def self.post(endpoint, body, headers)
+  def self.post(endpoint, body, headers, options = {multipart:false})
+    puts "[Echosign] #{endpoint}"
+    puts "[Echosign] #{headers}" if headers.present?
+    puts "[Echosign] #{body}"
     begin
-      HTTParty.post(
-        endpoint,
-        query: body, 
-        headers: headers
-      )
+      if options[:multipart]
+        response = HTTMultiParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
+      else
+        response = HTTParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
+      end
+      puts response
+      puts response.body
+      response
     rescue Exception => error
       raise_error(error)
     end
@@ -162,4 +165,3 @@ module Echosign::Request
   end
 
 end
-
