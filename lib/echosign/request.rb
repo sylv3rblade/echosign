@@ -147,9 +147,9 @@ module Echosign::Request
         body = body.to_json if body.is_a?(Hash)
       end
       if options[:multipart]
-        response = HTTMultiParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
+        response = HTTMultiParty.post(endpoint, body: body, headers: headers)
       else
-        response = HTTParty.post(endpoint, body: body, headers: headers, debug_output:$stdout)
+        response = HTTParty.post(endpoint, body: body, headers: headers)
       end
       puts response
       response
