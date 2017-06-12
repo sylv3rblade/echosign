@@ -123,13 +123,11 @@ module Echosign::Request
 
   def self.get(endpoint, headers)
     puts "[Echosign] #{endpoint}"
-    puts "[Echosign] #{headers}" if headers.present?
     begin
       response = HTTParty.get(
         endpoint,
         headers: headers
       )
-      puts response.body
       response
     rescue Exception => error
       raise_error(error)
@@ -139,7 +137,6 @@ module Echosign::Request
   def self.post(endpoint, body, headers, options = {})
     option = {multipart:false, json:false}.merge(options)
     puts "[Echosign] #{endpoint}"
-    puts "[Echosign] #{headers}" if headers.present?
     puts "[Echosign] #{body}"
     begin
       if options[:json]
@@ -151,7 +148,6 @@ module Echosign::Request
       else
         response = HTTParty.post(endpoint, body: body, headers: headers)
       end
-      puts response
       response
     rescue Exception => error
       raise_error(error)
